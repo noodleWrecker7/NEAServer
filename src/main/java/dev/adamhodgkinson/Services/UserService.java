@@ -6,7 +6,6 @@ import dev.adamhodgkinson.Models.User;
 import dev.adamhodgkinson.MongoDB;
 import dev.adamhodgkinson.SQLiteDB;
 import spark.Route;
-import spark.Session;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
@@ -29,15 +28,14 @@ public class UserService {
     public Route testService = (request, response) -> {
         System.out.println("test service");
         System.out.println(request.session().id());
+        Thread.currentThread().wait(1000);
         response.status(200);
         return "Hello World!";
     };
     public Route getUser = (request, response) -> {
         return null;
     };
-    public Route getInventory = (request, response) -> {
-        return null;
-    };
+
     public Route login = (request, response) -> {
         Gson g = new Gson();
         SignupBody body;
@@ -55,8 +53,8 @@ public class UserService {
             return "Invalid login details";
         }
         response.status(200);
-        Session session = request.session(request.session(false) == null);
-        session.attribute("username", u.username);
+        request.session(request.session(false) == null)
+                .attribute("username", u.username);
 
         return "Log in Successful";
     };
@@ -87,8 +85,8 @@ public class UserService {
         }
 
         response.status(200);
-        Session session = request.session(request.session(false) == null);
-        session.attribute("username", u.username);
+        request.session(request.session(false) == null)
+                .attribute("username", u.username);
         return "Account creation successful!";
     };
 

@@ -17,7 +17,6 @@ public class UserRoutes {
             post("/login", userService.login);
 
             get("/:username", userService.getUser);
-            get("/:username/inventory", userService.getInventory);
         });
     }
 }

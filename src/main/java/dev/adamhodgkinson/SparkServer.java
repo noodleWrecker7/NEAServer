@@ -1,5 +1,7 @@
 package dev.adamhodgkinson;
 
+import dev.adamhodgkinson.Routes.InventoryRoutes;
+import dev.adamhodgkinson.Routes.LevelRoutes;
 import dev.adamhodgkinson.Routes.UserRoutes;
 
 import static spark.Spark.*;
@@ -15,6 +17,8 @@ public class SparkServer {
         port(26500);
 
         UserRoutes.init(mongoDB, sqLiteDB);
+        LevelRoutes.init(mongoDB, sqLiteDB);
+        InventoryRoutes.init(mongoDB,sqLiteDB);
         System.out.println(port());
     }
 
