@@ -53,8 +53,7 @@ public class UserService {
             return "Invalid login details";
         }
         response.status(200);
-        request.session(request.session(false) == null)
-                .attribute("username", u.username);
+        request.session().attribute("username", u.username);
 
         return "Log in Successful";
     };

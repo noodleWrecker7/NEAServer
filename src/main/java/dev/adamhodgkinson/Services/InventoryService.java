@@ -53,6 +53,7 @@ public class InventoryService {
                 return "You dont not own this weapon";
             }
 
+            sqLiteDB.setUserEquippedWeapon(request.session().attribute("username"), weaponID);
 
 
         } catch (SQLException e) {
@@ -63,6 +64,7 @@ public class InventoryService {
 
         return null;
     };
+
     public Route createWeapon = (request, response) -> {
         if (request.session(false) == null) {
             response.status(401);

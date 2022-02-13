@@ -1,6 +1,7 @@
 package dev.adamhodgkinson;
 
 
+import dev.adamhodgkinson.Models.LevelMeta;
 import dev.adamhodgkinson.Models.User;
 import dev.adamhodgkinson.Models.Weapon;
 
@@ -28,6 +29,63 @@ public class SQLiteDB {
         s.setString(2, u.password_hash);
         s.setString(3, u.password_salt);
         s.execute();
+    }
+
+    public void insertLevel(LevelMeta level) throws SQLException {
+        String statementString = "INSERT INTO Level_Meta (LevelID, creator, date_created, title) VALUES (?,?,?,?)";
+        PreparedStatement s = connection.prepareStatement(statementString);
+        s.setString(1, level.levelID);
+        s.setString(2, level.creatorID);
+        s.setDate(3, level.dateCreated);
+        s.setString(4, level.title);
+        s.execute();
+    }
+
+    /**
+     * Gets list of levels sorted by age,
+     *
+     * @param page      - Which page to retrieve, starts at 1
+     * @param page_size - Rows per page, max of 50
+     */
+    public LevelMeta[] getLevels(int page, int page_size) {
+        try {
+            String statementString = "SELECT * FROM Level_Meta  ORDER BY date_created LIMIT ? OFFSET ?";
+            PreparedStatement s = connection.prepareStatement(statementString);
+            s.setInt(1, page_size);
+            s.setInt(2, (page - 1) * page_size);
+            ResultSet results = s.executeQuery();
+            if (!results.next()) {
+                return new LevelMeta[0];
+            }
+            // converts result set to array.
+            ArrayList<LevelMeta> list = new ArrayList<>();
+            do {
+                list.add(resultToLevelMetaObj(results));
+            } while (results.next());
+            LevelMeta[] array = new LevelMeta[list.size()];
+            list.toArray(array);
+            return array;
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return null;
+        }
+    }
+
+    public LevelMeta resultToLevelMetaObj(ResultSet results) {
+        LevelMeta levelMeta = new LevelMeta();
+        try {
+            levelMeta.levelID = results.getString("LevelID");
+            levelMeta.creatorID = results.getString("creator");
+            levelMeta.dateCreated = results.getDate("date_created");
+            levelMeta.title = results.getString("title");
+
+        } catch (SQLException e) {
+            System.out.println("Error reading level row");
+            System.out.println(e.getMessage());
+            return null;
+        }
+        return levelMeta;
     }
 
     public User findUserByName(String name) {
@@ -94,17 +152,23 @@ public class SQLiteDB {
         s.execute();
     }
 
-    private Weapon resultsToWeaponObj(ResultSet results) throws SQLException {
+    private Weapon resultsToWeaponObj(ResultSet results) {
         Weapon w = new Weapon();
-        w.attackspeed = results.getInt("attackspeed");
-        w.knockback = results.getInt("knockback");
-        w.damage = results.getInt("damage");
-        w.isMelee = results.getBoolean("isMelee");
-        w.textureName = results.getString("textureName");
-        w.weaponID = results.getString("weaponID");
-        w.username = results.getString("username");
-        w.range = results.getInt("range");
-        return w;
+        try {
+            w.attackspeed = results.getInt("attackspeed");
+            w.knockback = results.getInt("knockback");
+            w.damage = results.getInt("damage");
+            w.isMelee = results.getBoolean("isMelee");
+            w.textureName = results.getString("textureName");
+            w.weaponID = results.getString("weaponID");
+            w.username = results.getString("username");
+            w.range = results.getInt("range");
+            return w;
+        } catch (SQLException e) {
+            System.out.println("Error reading weapon");
+            System.out.println(e.getMessage());
+            return null;
+        }
     }
 
     public Weapon getWeaponById(String id) throws SQLException {

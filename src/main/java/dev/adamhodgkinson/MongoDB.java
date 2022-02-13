@@ -3,9 +3,12 @@ package dev.adamhodgkinson;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoConfigurationException;
+import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.result.InsertOneResult;
+import org.bson.Document;
 
 public class MongoDB {
 
@@ -14,7 +17,7 @@ public class MongoDB {
 
     public MongoDB(String username, String password) {
         try {
-            ConnectionString connectionString = new ConnectionString("mongodb+srv://" + username + "x:" + password + "@cluster0.tty2i.mongodb.net/ShootyStabby?retryWrites=true&w=majority");
+            ConnectionString connectionString = new ConnectionString("mongodb+srv://" + username + ":" + password + "@cluster0.tty2i.mongodb.net/ShootyStabby?retryWrites=true&w=majority");
             MongoClientSettings settings = MongoClientSettings.builder()
                     .applyConnectionString(connectionString)
                     .build();
@@ -28,6 +31,22 @@ public class MongoDB {
             System.out.println("Error: Mongo Connection invalid");
             e.printStackTrace();
             Server.close();
+        }
+    }
+
+    public ClientSession newSession() {
+        return mongoClient.startSession();
+    }
+
+    public String insertNewLevelDoc(String levelcode, ClientSession session) {
+        Document level = new Document("levelcode", levelcode);
+        InsertOneResult result = database.getCollection("Levels").insertOne(session, level);
+        System.out.println("Inserted new level: " + result.getInsertedId());
+        try {
+            return result.getInsertedId().asObjectId().getValue().toString();
+        } catch (NullPointerException e) {
+            System.out.println("Error inserting document");
+            return null;
         }
     }
 
