@@ -23,23 +23,43 @@ public class LevelService {
         this.sqLiteDB = sqLiteDB;
     }
 
+    /**
+     * Lists all level metadata, excludes json data,
+     * requires page_size and page_num to be defined in request params
+     */
     public Route listLevels = (request, response) -> {
-        ListLevelsBody body;
-        body = Utils.convertBodyToObject(request.body(), ListLevelsBody.class);
+//        ListLevelsBody body;
+//        body = Utils.convertBodyToObject(request.body(), ListLevelsBody.class);
 
-        if (body == null) {
+//        if (body == null) {
+//            response.status(400);
+//            return "Failed to read request";
+//        }
+        int page_size;
+        int page_num;
+        try {
+            page_size = Integer.parseInt(request.queryParams("page_size"));
+            page_num = Integer.parseInt(request.queryParams("page_num"));
+        } catch (NumberFormatException e) {
             response.status(400);
-            return "Failed to read request";
+            return "Params not valid integers";
         }
-        if (body.page_size > 50) {
+        if (page_size > 50) {
             response.status(400);
             return "Page size too large";
         }
-        if (body.page < 1) {
+        if (page_num < 1) {
             response.status(400);
             return "Page number invalid";
         }
-        LevelMeta[] levels = sqLiteDB.getLevels(body.page, body.page_size);
+        LevelMeta[] levels;
+
+        if (request.queryParams("search") != null && !request.queryParams("search").equals("")) {
+            levels = sqLiteDB.getLevelsWithSearch(page_num, page_size, request.queryParams("search"));
+        } else {
+            levels = sqLiteDB.getLevels(page_num, page_size);
+        }
+
         if (levels == null) {
             response.status(500);
             return "Error reading levels";
@@ -53,9 +73,30 @@ public class LevelService {
         return null;
     };
 
+    /**
+     * Sends the all the data for a level including json data
+     */
     public Route getLevel = (request, response) -> {
-        return null;
+        if (request.session(false) == null) {
+            response.status(401);
+            return "You must be logged in to do that!";
+        }
+        if (request.params("id") == null) {
+            response.status(400);
+            return "Level not specified";
+        }
+        System.out.println(request.params("id"));
+        String levelcode = mongoDB.getLevelJsonData(request.params("id"));
+
+        if (levelcode == null) {
+            response.status(404);
+            return "Failed to find leveldata";
+        }
+
+        response.status(200);
+        return levelcode;
     };
+
 
     public Route createLevel = (request, response) -> {
         // todo check input level data is actually valid

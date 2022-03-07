@@ -12,6 +12,7 @@ import java.util.Random;
 public class InventoryService {
     MongoDB mongoDB;
     SQLiteDB sqLiteDB;
+    Gson g = new Gson();
 
     public InventoryService(MongoDB mongoDB, SQLiteDB sqLiteDB) {
         this.mongoDB = mongoDB;
@@ -28,7 +29,6 @@ public class InventoryService {
             response.status(500);
             return "Error reading inventory";
         }
-        Gson g = new Gson();
         response.status(200);
         return g.toJson(inv);
 
@@ -36,32 +36,51 @@ public class InventoryService {
     };
 
     public Route getEquippedWeapon = (request, response) -> {
-        return null;
+        // authenticates user
+        if (request.session(false) == null) {
+            response.status(401);
+            return "You must be logged in to access this feature";
+        }
+        Weapon wep = sqLiteDB.getEquippedWeapon(request.session().attribute("username"));
+        if (wep == null) {
+            sqLiteDB.equipDefaultWeapon(request.session().attribute("username"));
+        }
+        try {
+            wep = sqLiteDB.getEquippedWeapon(request.session().attribute("username"));
+        } catch (SQLException e) {
+            response.status(500);
+            return "Error occurred inserting default weapon";
+        }
+        response.status(200);
+        return g.toJson(wep, Weapon.class);
     };
 
+    /**
+     * Sets a players equipped weapon
+     */
     public Route setEquippedWeapon = (request, response) -> {
         String weaponID = request.body();
         // first get weapon to check it belongs to this user
         try {
+            // retreives weapon data first
             Weapon weapon = sqLiteDB.getWeaponById(weaponID);
-            if(weapon == null){
+            if (weapon == null) {// checks the weapon actually exists
                 response.status(500);
                 return "Could not locate weapon";
             }
-            if (weapon.username != request.session().attribute("username")){
+            // checks the weapon is actually owned by the user
+            if (weapon.username != request.session(false).attribute("username")) {
                 response.status(403);
                 return "You dont not own this weapon";
             }
-
+            // sets users equipped weapon
             sqLiteDB.setUserEquippedWeapon(request.session().attribute("username"), weaponID);
 
-
+            response.status(200);
         } catch (SQLException e) {
             response.status(500);
             return "Error reading from DB";
         }
-
-
         return null;
     };
 
@@ -70,7 +89,7 @@ public class InventoryService {
             response.status(401);
             return "You must be logged in to access this feature";
         }
-        Weapon w = new Gson().fromJson(request.body(), Weapon.class);
+        Weapon w = g.fromJson(request.body(), Weapon.class);
         w.weaponID = generateWeaponID();
         w.username = request.session().attribute("username");
         System.out.println(w.username);
@@ -88,9 +107,9 @@ public class InventoryService {
         return null;
     };
 
-    String charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+    static String charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 
-    private String generateWeaponID() {
+    public static String generateWeaponID() {
         Random r = new Random();
         StringBuilder s = new StringBuilder();
         for (int i = 0; i < 10; i++) {

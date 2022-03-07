@@ -8,6 +8,8 @@ import dev.adamhodgkinson.Models.Weapon;
 import java.sql.*;
 import java.util.ArrayList;
 
+import static dev.adamhodgkinson.Services.InventoryService.generateWeaponID;
+
 public class SQLiteDB {
     Connection connection;
 
@@ -49,27 +51,88 @@ public class SQLiteDB {
      */
     public LevelMeta[] getLevels(int page, int page_size) {
         try {
-            String statementString = "SELECT * FROM Level_Meta  ORDER BY date_created LIMIT ? OFFSET ?";
+            String statementString = "SELECT * FROM Level_Meta ORDER BY date_created LIMIT ? OFFSET ?";
             PreparedStatement s = connection.prepareStatement(statementString);
             s.setInt(1, page_size);
             s.setInt(2, (page - 1) * page_size);
             ResultSet results = s.executeQuery();
-            if (!results.next()) {
-                return new LevelMeta[0];
-            }
-            // converts result set to array.
-            ArrayList<LevelMeta> list = new ArrayList<>();
-            do {
-                list.add(resultToLevelMetaObj(results));
-            } while (results.next());
-            LevelMeta[] array = new LevelMeta[list.size()];
-            list.toArray(array);
-            return array;
+            return handleResultsOfLevelList(results);
 
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return null;
         }
+    }
+
+    public LevelMeta[] handleResultsOfLevelList(ResultSet results) throws SQLException {
+        if (!results.next()) {
+            return new LevelMeta[0];
+        }
+        // converts result set to array.
+        ArrayList<LevelMeta> list = new ArrayList<>();
+        do {
+            list.add(resultToLevelMetaObj(results));
+        } while (results.next());
+        LevelMeta[] array = new LevelMeta[list.size()];
+        list.toArray(array);
+        return array;
+    }
+
+    /**
+     * Gets list of levels sorted by age,
+     *
+     * @param page      - Which page to retrieve, starts at 1
+     * @param page_size - Rows per page, max of 50
+     */
+    public LevelMeta[] getLevelsWithSearch(int page, int page_size, String searchTerm) {
+        try {
+            String statementString = "SELECT * FROM Level_Meta WHERE title LIKE ? ORDER BY date_created LIMIT ? OFFSET ?";
+            PreparedStatement s = connection.prepareStatement(statementString);
+            s.setString(1, searchTerm);
+            s.setInt(2, page_size);
+            s.setInt(3, (page - 1) * page_size);
+            ResultSet results = s.executeQuery();
+            return handleResultsOfLevelList(results);
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return null;
+        }
+    }
+
+    public LevelMeta findLevelMeta(String id) {
+        try {
+            String statementString = "SELECT * FROM Level_Meta WHERE LevelID = ?";
+            PreparedStatement s = connection.prepareStatement(statementString);
+            s.setString(1, id);
+            ResultSet results = s.executeQuery();
+
+            if (!results.next()) {
+                return null;
+            }
+
+            return resultToLevelMetaObj(results);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return null;
+        }
+
+    }
+
+    /**Creates a new weapon and equips for the user*/
+    public void equipDefaultWeapon(String username) throws SQLException {
+        // generates default weapon
+        Weapon w = new Weapon();
+        w.username = username;
+        w.weaponID = generateWeaponID();
+        w.range = 3;
+        w.damage = 1;
+        w.isMelee = true;
+        w.knockback = 1;
+        w.attackspeed = 500;
+        w.textureName = "game/weapons/weapon_anime_sword";
+        this.insertWeapon(w);
+        this.setUserEquippedWeapon(username, w.weaponID);
     }
 
     public LevelMeta resultToLevelMetaObj(ResultSet results) {
@@ -181,6 +244,18 @@ public class SQLiteDB {
         }
         return resultsToWeaponObj(results);
 
+    }
+
+    public Weapon getEquippedWeapon(String userId) throws SQLException {
+        String statementString = "SELECT Weapons.* FROM Weapons INNER JOIN Users U on Weapons.username = U.username and Weapons.weaponID = U.equipped_weapon WHERE U.username = ?";
+        PreparedStatement s = connection.prepareStatement(statementString);
+        s.setString(1, userId);
+        ResultSet results = s.executeQuery();
+        if(!results.next()){
+            return null;
+        }
+
+        return resultsToWeaponObj(results);
     }
 
     public void setUserEquippedWeapon(String username, String weaponID) throws SQLException {

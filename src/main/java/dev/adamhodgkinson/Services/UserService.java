@@ -3,6 +3,7 @@ package dev.adamhodgkinson.Services;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import dev.adamhodgkinson.Models.User;
+import dev.adamhodgkinson.Models.Weapon;
 import dev.adamhodgkinson.MongoDB;
 import dev.adamhodgkinson.SQLiteDB;
 import spark.Route;
@@ -15,6 +16,8 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.sql.SQLException;
 import java.util.Arrays;
+
+import static dev.adamhodgkinson.Services.InventoryService.generateWeaponID;
 
 public class UserService {
     MongoDB mongoDB;
@@ -82,6 +85,9 @@ public class UserService {
             response.status(500);
             return "Error inserting record";
         }
+
+        sqLiteDB.equipDefaultWeapon(u.username);
+
 
         response.status(200);
         request.session(request.session(false) == null)

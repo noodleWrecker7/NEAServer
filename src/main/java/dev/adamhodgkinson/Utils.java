@@ -5,6 +5,10 @@ import com.google.gson.JsonSyntaxException;
 
 public class Utils {
     static Gson g = new Gson();
+    /**Utility method for converting a request.body json string to an object using Gson library
+     * @param in JSON String input
+     * @param type Class to create object of
+     * @return Object of type type, or null if error encountered*/
     public static <T> T convertBodyToObject(String in, Class<T> type){
         try {
             return g.fromJson(in, type);

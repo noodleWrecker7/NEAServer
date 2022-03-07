@@ -7,8 +7,11 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.result.InsertOneResult;
 import org.bson.Document;
+import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
 
 public class MongoDB {
 
@@ -36,6 +39,15 @@ public class MongoDB {
 
     public ClientSession newSession() {
         return mongoClient.startSession();
+    }
+
+    public String getLevelJsonData(String id){
+        Bson filter = Filters.eq("_id", new ObjectId( id));
+        Document doc = database.getCollection("Levels").find(filter).first();
+        if(doc == null){
+            return null;
+        }
+        return doc.get("levelcode", String.class);
     }
 
     public String insertNewLevelDoc(String levelcode, ClientSession session) {

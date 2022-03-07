@@ -15,7 +15,6 @@ public class LevelRoutes {
             get("/list", levelService.listLevels); // default to first 50, take page in query params
             get("/:id/leaderboard", levelService.getLeaderboard);
             get("/:id", levelService.getLevel);
-            // todo search levels route
             post("/create", levelService.createLevel);
         });
     }
