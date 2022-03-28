@@ -14,8 +14,9 @@ public class LevelRoutes {
         path("/level", () -> {
             get("/list", levelService.listLevels); // default to first 50, take page in query params
             get("/:id/leaderboard", levelService.getLeaderboard);
-            get("/:id", levelService.getLevel);
             post("/create", levelService.createLevel);
+            post("/:id/time", levelService.setTime);
+            get("/:id", levelService.getLevel);
         });
     }
 }

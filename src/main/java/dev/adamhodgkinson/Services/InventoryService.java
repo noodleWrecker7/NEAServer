@@ -7,6 +7,7 @@ import dev.adamhodgkinson.SQLiteDB;
 import spark.Route;
 
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.Random;
 
 public class InventoryService {
@@ -69,7 +70,7 @@ public class InventoryService {
                 return "Could not locate weapon";
             }
             // checks the weapon is actually owned by the user
-            if (weapon.username != request.session(false).attribute("username")) {
+            if (!weapon.username.equals(request.session().attribute("username"))) {
                 response.status(403);
                 return "You dont not own this weapon";
             }
@@ -77,11 +78,11 @@ public class InventoryService {
             sqLiteDB.setUserEquippedWeapon(request.session().attribute("username"), weaponID);
 
             response.status(200);
+            return "Successfully equipped";
         } catch (SQLException e) {
             response.status(500);
             return "Error reading from DB";
         }
-        return null;
     };
 
     public Route createWeapon = (request, response) -> {
@@ -109,10 +110,18 @@ public class InventoryService {
 
     static String charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 
+
+    static int increment = 0;
+
     public static String generateWeaponID() {
         Random r = new Random();
         StringBuilder s = new StringBuilder();
-        for (int i = 0; i < 10; i++) {
+        s.append(new Date().getTime());
+        s.append(increment++);
+        if (increment >= 100000) {
+            increment = 0;
+        }
+        for (int i = 0; i < 5; i++) {
             s.append(charset.charAt(r.nextInt(charset.length())));
         }
         return "WEP" + s;

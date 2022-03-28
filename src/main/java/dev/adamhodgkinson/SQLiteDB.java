@@ -1,6 +1,7 @@
 package dev.adamhodgkinson;
 
 
+import dev.adamhodgkinson.Models.LeaderboardEntry;
 import dev.adamhodgkinson.Models.LevelMeta;
 import dev.adamhodgkinson.Models.User;
 import dev.adamhodgkinson.Models.Weapon;
@@ -100,6 +101,36 @@ public class SQLiteDB {
         }
     }
 
+    public void insertLeaderBoardEntry(String levelID, String username, int time) throws SQLException {
+        String statementString = "INSERT INTO Leaderboard (LevelID, username, completed) VALUES (?,?,?)";
+        PreparedStatement s = connection.prepareStatement(statementString);
+        s.setString(1, levelID);
+        s.setString(2, username);
+        s.setInt(3, time);
+        s.execute();
+    }
+
+    public LeaderboardEntry getLeaderboardForLevelById(String id) {
+        try {
+            String statementString = "SELECT * FROM Leaderboard WHERE LevelID = ? ORDER BY completed ASC LIMIT 1 ";
+            PreparedStatement s = connection.prepareStatement(statementString);
+            s.setString(1, id);
+            ResultSet results = s.executeQuery();
+            if (!results.next()) {
+                return null;
+            }
+            LeaderboardEntry entry = new LeaderboardEntry();
+            entry.levelID = id;
+            entry.time = Long.parseLong(results.getString("completed"));
+            entry.username = results.getString("username");
+
+            return entry;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return null;
+        }
+    }
+
     public LevelMeta findLevelMeta(String id) {
         try {
             String statementString = "SELECT * FROM Level_Meta WHERE LevelID = ?";
@@ -116,10 +147,11 @@ public class SQLiteDB {
             System.out.println(e.getMessage());
             return null;
         }
-
     }
 
-    /**Creates a new weapon and equips for the user*/
+    /**
+     * Creates a new weapon and equips for the user
+     */
     public void equipDefaultWeapon(String username) throws SQLException {
         // generates default weapon
         Weapon w = new Weapon();
@@ -251,7 +283,7 @@ public class SQLiteDB {
         PreparedStatement s = connection.prepareStatement(statementString);
         s.setString(1, userId);
         ResultSet results = s.executeQuery();
-        if(!results.next()){
+        if (!results.next()) {
             return null;
         }
 

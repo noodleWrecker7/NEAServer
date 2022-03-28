@@ -3,6 +3,7 @@ package dev.adamhodgkinson.Services;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.mongodb.client.ClientSession;
+import dev.adamhodgkinson.Models.LeaderboardEntry;
 import dev.adamhodgkinson.Models.LevelMeta;
 import dev.adamhodgkinson.MongoDB;
 import dev.adamhodgkinson.SQLiteDB;
@@ -69,8 +70,53 @@ public class LevelService {
 
     };
 
+    public Route setTime = (request, response) -> {
+        if (request.session(false) == null) {
+            response.status(401);
+            return "You must be logged in to do that!";
+        }
+        if (request.params("id") == null) {
+            response.status(400);
+            return "Level not specified";
+        }
+
+        System.out.println("setting new time");
+        System.out.println(request.body());
+        SetTimeBody body = g.fromJson(request.body(), SetTimeBody.class);
+        System.out.println(body.levelID);
+        System.out.println(body.levelID + " " + request.session().attribute("username") + " " + body.time);
+        try {
+            sqLiteDB.insertLeaderBoardEntry(body.levelID, request.session(false).attribute("username"), body.time);
+            response.status(200);
+            return "Success";
+        } catch (SQLException e) {
+            response.status(500);
+            return "Error inserting record";
+        }
+    };
+
+    static class SetTimeBody {
+        String levelID;
+        int time;
+    }
+
+
     public Route getLeaderboard = (request, response) -> {
-        return null;
+        if (request.params("id") == null) {
+            response.status(400);
+            return "Level not specified";
+        }
+
+        System.out.println("Requesting level " + request.params("id"));
+
+        LeaderboardEntry entry = sqLiteDB.getLeaderboardForLevelById(request.params("id"));
+        if (entry != null) {
+            response.status(200);
+            return g.toJson(entry);
+        } else {
+            response.status(404);
+            return null;
+        }
     };
 
     /**

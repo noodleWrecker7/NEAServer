@@ -44,7 +44,7 @@ CREATE TABLE 'Leaderboard'
 (
     'LevelID'   varchar(45) NOT NULL,
     'username'  varchar(45) NOT NULL,
-    'completed' time        NOT NULL,
+    'completed' int        NOT NULL,
 
     FOREIGN KEY (LevelID) REFERENCES Level_Meta (LevelID),
     FOREIGN KEY (username) REFERENCES Users (username)
