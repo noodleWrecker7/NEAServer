@@ -56,6 +56,8 @@ public class LevelService {
         LevelMeta[] levels;
 
         if (request.queryParams("search") != null && !request.queryParams("search").equals("")) {
+            System.out.println("doing search");
+            System.out.println(request.queryParams("search"));
             levels = sqLiteDB.getLevelsWithSearch(page_num, page_size, request.queryParams("search"));
         } else {
             levels = sqLiteDB.getLevels(page_num, page_size);
@@ -145,11 +147,11 @@ public class LevelService {
 
 
     public Route createLevel = (request, response) -> {
-        // todo check input level data is actually valid
         if (request.session(false) == null) {
             response.status(401);
             return "You must be logged in to do that!";
         }
+
         CreateLevelBody body = Utils.convertBodyToObject(request.body(), CreateLevelBody.class);
         if (body == null) {
             response.status(400);

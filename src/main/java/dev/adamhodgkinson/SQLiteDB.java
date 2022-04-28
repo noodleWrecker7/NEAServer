@@ -87,11 +87,12 @@ public class SQLiteDB {
      */
     public LevelMeta[] getLevelsWithSearch(int page, int page_size, String searchTerm) {
         try {
-            String statementString = "SELECT * FROM Level_Meta WHERE title LIKE ? ORDER BY date_created LIMIT ? OFFSET ?";
+            String statementString = "SELECT * FROM Level_Meta WHERE title LIKE ? OR instr(title, ?) > 0 ORDER BY date_created LIMIT ? OFFSET ?";
             PreparedStatement s = connection.prepareStatement(statementString);
-            s.setString(1, searchTerm);
-            s.setInt(2, page_size);
-            s.setInt(3, (page - 1) * page_size);
+            s.setString(1, "%"+searchTerm+"%");
+            s.setString(2, searchTerm);
+            s.setInt(3, page_size);
+            s.setInt(4, (page - 1) * page_size);
             ResultSet results = s.executeQuery();
             return handleResultsOfLevelList(results);
 
