@@ -11,10 +11,12 @@ import java.util.ArrayList;
 
 import static dev.adamhodgkinson.Services.InventoryService.generateWeaponID;
 
+/**Class to manage the interactions with the SQLite database*/
 public class SQLiteDB {
     Connection connection;
 
-
+    /**Loads the database data from the passed file
+     * @param filepath Path of the file to open*/
     public SQLiteDB(String filepath) {
         try {
             // create a database connection
@@ -25,7 +27,9 @@ public class SQLiteDB {
         }
     }
 
+    /**Inserts the user object into the Users table in the database*/
     public void insertUser(User u) throws SQLException {
+        // uses prepared statements to prevent SQL injection attacks
         String statementString = "INSERT INTO Users (username, password_hash, password_salt) VALUES (?,?,?)";
         PreparedStatement s = connection.prepareStatement(statementString);
         s.setString(1, u.username);
@@ -34,6 +38,7 @@ public class SQLiteDB {
         s.execute();
     }
 
+    /**Inserts the level object into the Levels table in the database*/
     public void insertLevel(LevelMeta level) throws SQLException {
         String statementString = "INSERT INTO Level_Meta (LevelID, creator, date_created, title) VALUES (?,?,?,?)";
         PreparedStatement s = connection.prepareStatement(statementString);
@@ -65,6 +70,7 @@ public class SQLiteDB {
         }
     }
 
+    /**Parses a ResultSet object's data and formats it into an array of LevelMeta objects*/
     public LevelMeta[] handleResultsOfLevelList(ResultSet results) throws SQLException {
         if (!results.next()) {
             return new LevelMeta[0];
@@ -80,10 +86,11 @@ public class SQLiteDB {
     }
 
     /**
-     * Gets list of levels sorted by age,
+     * Gets list of levels sorted by age, also includes a search parameter
      *
      * @param page      - Which page to retrieve, starts at 1
      * @param page_size - Rows per page, max of 50
+     * @param searchTerm    - Search parameter
      */
     public LevelMeta[] getLevelsWithSearch(int page, int page_size, String searchTerm) {
         try {
@@ -102,6 +109,7 @@ public class SQLiteDB {
         }
     }
 
+    /**Inserts leaderboard entry of a users completion time for a level into the leaderboard entry table*/
     public void insertLeaderBoardEntry(String levelID, String username, int time) throws SQLException {
         String statementString = "INSERT INTO Leaderboard (LevelID, username, completed) VALUES (?,?,?)";
         PreparedStatement s = connection.prepareStatement(statementString);
@@ -111,6 +119,8 @@ public class SQLiteDB {
         s.execute();
     }
 
+    /**Returns fastest time for a level
+     * @param id the level to get the time for*/
     public LeaderboardEntry getLeaderboardForLevelById(String id) {
         try {
             String statementString = "SELECT * FROM Leaderboard WHERE LevelID = ? ORDER BY completed ASC LIMIT 1 ";
@@ -151,7 +161,7 @@ public class SQLiteDB {
     }
 
     /**
-     * Creates a new weapon and equips for the user
+     * Creates a new weapon and equips for the user, should be used when a new user is created to ensure that their inventory is not empty
      */
     public void equipDefaultWeapon(String username) throws SQLException {
         // generates default weapon
@@ -168,6 +178,8 @@ public class SQLiteDB {
         this.setUserEquippedWeapon(username, w.weaponID);
     }
 
+    /**Converts a ResultSet object into a LevelMeta object. Assumes that there is onyl one entry in the
+     * result set object but will not fail if there are more.*/
     public LevelMeta resultToLevelMetaObj(ResultSet results) {
         LevelMeta levelMeta = new LevelMeta();
         try {
@@ -184,6 +196,7 @@ public class SQLiteDB {
         return levelMeta;
     }
 
+    /**Returns a user object where the username matches the passed in name. Returns null if it does not exist.*/
     public User findUserByName(String name) {
         // will be executed on the database
         String statementString = "SELECT * FROM Users WHERE username = ?";

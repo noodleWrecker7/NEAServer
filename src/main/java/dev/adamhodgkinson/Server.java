@@ -8,6 +8,7 @@ public class Server {
     static SparkServer sparkServer;
 
     public static void main(String[] args) {
+        // Gets mongodb login from passed arguments
         String username = args[0];
         String password = args[1];
 
@@ -16,7 +17,7 @@ public class Server {
         sparkServer = new SparkServer(mongoDB, sqliteDB);
     }
 
-
+    /**Closes all open processes*/
     public static void close() {
         sparkServer.close();
         mongoDB.close();
