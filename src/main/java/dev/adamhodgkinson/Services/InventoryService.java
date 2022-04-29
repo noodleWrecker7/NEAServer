@@ -104,10 +104,6 @@ public class InventoryService {
         return "Success";
     };
 
-    public Route removeWeapon = (request, response) -> {
-        return null;
-    };
-
     static String charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 
 

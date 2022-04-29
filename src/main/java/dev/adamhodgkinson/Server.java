@@ -14,8 +14,6 @@ public class Server {
         mongoDB = new MongoDB(username, password);
         sqliteDB = new SQLiteDB("sample.db");
         sparkServer = new SparkServer(mongoDB, sqliteDB);
-
-
     }
 
 

@@ -69,7 +69,6 @@ public class LevelService {
         }
         response.status(200);
         return g.toJson(levels);
-
     };
 
     public Route setTime = (request, response) -> {

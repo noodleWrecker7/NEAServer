@@ -16,9 +16,6 @@ public class InventoryRoutes {
             get("/weapon/equipped", inventoryService.getEquippedWeapon);
             post("/weapon/equipped", inventoryService.setEquippedWeapon);
             post("/weapon", inventoryService.createWeapon);
-
-            delete("/weapon/:id", inventoryService.removeWeapon);
-
         });
     }
 }
